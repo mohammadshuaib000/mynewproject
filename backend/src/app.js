@@ -1,4 +1,6 @@
-// server.js or app.js
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -7,8 +9,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import hpp from 'hpp';
 import xss from 'xss-clean';
-
-
+import CustomerAuthRoute from "./modules/auth/customer.routes.js";
 
 // Import middlewares
 import { generalLimiter } from "./middlewares/rateLimitMiddleware.js";
@@ -18,6 +19,9 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { initializeCloudinary } from "./config/cloudinary.js";
 
 const app = express();
+
+// Optional: trust proxy if behind proxy/load balancer
+// app.set('trust proxy', 1);
 
 // Initialize Cloudinary
 initializeCloudinary();
@@ -66,9 +70,8 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use("/api/v1/auth/admin", AdminRoute);
-app.use("/api/v1/auth/user", CustomerAuthRoute);
-
+// app.use("/api/v1/auth/admin", AdminRoute);
+app.use("/api/v1/auth/customers", CustomerAuthRoute);
 
 // 404 handler for undefined routes
 app.all('*', (req, res) => {

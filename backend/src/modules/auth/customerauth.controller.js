@@ -1,7 +1,7 @@
 import * as otpService from "../../services/otpService.js";
 import * as userService from "../../services/userService.js";
-import { validateEmail, validatePhone, sanitizeInput, formatPhoneToE164, validateOTP } from "../../utils/validation.js";
-import { UserAuth } from "./userauth.model.js";
+import { validateEmail, validatePhone, sanitizeInput, formatPhoneToE164 } from "../../utils/validation.js";
+import { CustomerAuth } from "./auth.model.js";  // Correct import here
 
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
@@ -51,8 +51,6 @@ const sendOTP = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to send OTP", [], error.stack);
     }
 });
-
-
 
 export {
     sendOTP

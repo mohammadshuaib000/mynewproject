@@ -12,10 +12,10 @@ const configureCloudinary = () => {
         });
 
         console.log("✅ Cloudinary configured successfully");
-        return true;
+        return cloudinary;  // Return instance for use elsewhere if needed
     } catch (error) {
-        console.error("❌ Cloudinary configuration failed:", error.message);
-        return false;
+        console.error("❌ Cloudinary configuration failed:", error);
+        return null;
     }
 };
 

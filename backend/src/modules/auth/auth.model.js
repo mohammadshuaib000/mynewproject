@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 const CustomerAuthSchema = new mongoose.Schema(
@@ -28,7 +27,6 @@ const CustomerAuthSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-
 const AdminAuthSchema = new mongoose.Schema(
     {
         email: {
@@ -44,12 +42,12 @@ const AdminAuthSchema = new mongoose.Schema(
             required: true,
             default: 'flipkart@123', // Will be hashed before saving
         },
-        isVerified:{
-            type:Boolean,
-            default:false
+        isVerified: {
+            type: Boolean,
+            default: false,
         },
-        refreshToken:{
-            type:String
+        refreshToken: {
+            type: String,
         }
     },
     { timestamps: true }

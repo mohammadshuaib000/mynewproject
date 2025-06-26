@@ -1,41 +1,38 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
+import fs from "fs/promises";
 import { ApiError } from "../utils/ApiError.js";
 
 // Configure Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Upload file to Cloudinary
+/**
+ * Upload file to Cloudinary and delete local file after upload
+ * @param {string} localFilePath - Path to local file
+ * @param {object} options - Cloudinary upload options
+ * @returns {object} Upload result details
+ */
 const uploadOnCloudinary = async (localFilePath, options = {}) => {
+    if (!localFilePath) throw new ApiError(400, "No file path provided");
+
     try {
-        if (!localFilePath) {
-            throw new ApiError(400, "No file path provided");
-        }
+        await fs.access(localFilePath); // Check file existence asynchronously
 
-        // Check if file exists
-        if (!fs.existsSync(localFilePath)) {
-            throw new ApiError(400, "File does not exist");
-        }
-
-        // Default upload options
         const uploadOptions = {
             resource_type: "auto",
             folder: options.folder || "sajawat-sarees",
             use_filename: true,
             unique_filename: true,
             overwrite: false,
-            ...options
+            ...options,
         };
 
-        // Upload the file to Cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, uploadOptions);
 
-        // Remove the locally saved temporary file after successful upload
-        fs.unlinkSync(localFilePath);
+        await fs.unlink(localFilePath); // Async remove local file
 
         return {
             success: true,
@@ -45,52 +42,53 @@ const uploadOnCloudinary = async (localFilePath, options = {}) => {
             height: response.height,
             format: response.format,
             bytes: response.bytes,
-            createdAt: response.created_at
+            createdAt: response.created_at,
         };
-
     } catch (error) {
-        // Remove the locally saved temporary file if upload failed
-        if (fs.existsSync(localFilePath)) {
-            fs.unlinkSync(localFilePath);
-        }
+        // Attempt to remove local file if it exists, ignore errors here
+        try {
+            await fs.unlink(localFilePath);
+        } catch {}
 
         console.error("Cloudinary upload error:", error);
         throw new ApiError(500, `Failed to upload image: ${error.message}`);
     }
 };
 
-// Upload profile image with specific settings
+/**
+ * Upload profile image with specific transformation options
+ * @param {string} localFilePath 
+ * @param {string|number} userId 
+ * @returns {object} Upload result
+ */
 const uploadProfileImage = async (localFilePath, userId) => {
-    try {
-        const options = {
-            folder: "sajawat-sarees/profiles",
-            public_id: `profile_${userId}_${Date.now()}`,
-            transformation: [
-                { width: 400, height: 400, crop: "fill", gravity: "face" },
-                { quality: "auto", fetch_format: "auto" }
-            ]
-        };
+    if (!userId) throw new ApiError(400, "User ID is required");
 
-        return await uploadOnCloudinary(localFilePath, options);
-    } catch (error) {
-        throw new ApiError(500, `Failed to upload profile image: ${error.message}`);
-    }
+    const options = {
+        folder: "sajawat-sarees/profiles",
+        public_id: `profile_${userId}_${Date.now()}`,
+        transformation: [
+            { width: 400, height: 400, crop: "fill", gravity: "face" },
+            { quality: "auto", fetch_format: "auto" },
+        ],
+    };
+
+    return uploadOnCloudinary(localFilePath, options);
 };
 
-
-
-// Delete image from Cloudinary
+/**
+ * Delete image from Cloudinary by public ID
+ * @param {string} publicId 
+ * @returns {object} Result of deletion
+ */
 const deleteFromCloudinary = async (publicId) => {
+    if (!publicId) throw new ApiError(400, "No public ID provided");
+
     try {
-        if (!publicId) {
-            throw new ApiError(400, "No public ID provided");
-        }
-
         const response = await cloudinary.uploader.destroy(publicId);
-
         return {
-            success: response.result === 'ok',
-            result: response.result
+            success: response.result === "ok",
+            result: response.result,
         };
     } catch (error) {
         console.error("Cloudinary delete error:", error);
@@ -98,18 +96,19 @@ const deleteFromCloudinary = async (publicId) => {
     }
 };
 
-
-
-// Generate optimized image URL
+/**
+ * Generate optimized image URL from public ID
+ * @param {string} publicId 
+ * @param {object} options - Transformation options
+ * @returns {string} Cloudinary image URL
+ */
 const generateOptimizedUrl = (publicId, options = {}) => {
-    try {
-        if (!publicId) {
-            throw new ApiError(400, "No public ID provided");
-        }
+    if (!publicId) throw new ApiError(400, "No public ID provided");
 
+    try {
         const defaultOptions = {
             quality: "auto",
-            fetch_format: "auto"
+            fetch_format: "auto",
         };
 
         const transformOptions = { ...defaultOptions, ...options };
@@ -120,8 +119,6 @@ const generateOptimizedUrl = (publicId, options = {}) => {
         throw new ApiError(500, `Failed to generate optimized URL: ${error.message}`);
     }
 };
-
-
 
 export {
     uploadOnCloudinary,

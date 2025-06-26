@@ -15,12 +15,12 @@ export const securityConfig = {
       message: {
         success: false,
         message: 'Too many requests from this IP, please try again later.',
-        retryAfter: 15 * 60,
+        retryAfter: 15 * 60, // seconds
       },
       standardHeaders: true,
       legacyHeaders: false,
     },
-    
+
     // Authentication endpoints
     auth: {
       windowMs: 15 * 60 * 1000, // 15 minutes
@@ -33,7 +33,7 @@ export const securityConfig = {
       standardHeaders: true,
       legacyHeaders: false,
     },
-    
+
     // OTP endpoints
     otp: {
       windowMs: 60 * 60 * 1000, // 1 hour
@@ -46,7 +46,7 @@ export const securityConfig = {
       standardHeaders: true,
       legacyHeaders: false,
     },
-    
+
     // Password reset
     passwordReset: {
       windowMs: 60 * 60 * 1000, // 1 hour
@@ -60,14 +60,14 @@ export const securityConfig = {
       legacyHeaders: false,
     },
   },
-  
+
   // Helmet security headers configuration
   helmet: {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'"], // add external script URLs if needed here
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'"],
         fontSrc: ["'self'"],
@@ -78,20 +78,23 @@ export const securityConfig = {
     },
     crossOriginEmbedderPolicy: false,
     hsts: {
-      maxAge: 31536000,
+      maxAge: 31536000, // 1 year
       includeSubDomains: true,
       preload: true,
     },
   },
-  
+
   // CORS configuration
   cors: {
     origin: function (origin, callback) {
-      const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'];
-      
-      // Allow requests with no origin (mobile apps, etc.)
+      const allowedOrigins =
+        process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) || [
+          'http://localhost:3000',
+        ];
+
+      // Allow requests with no origin (mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -110,27 +113,28 @@ export const securityConfig = {
       'Pragma',
     ],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
-    maxAge: 86400, // 24 hours
+    maxAge: 86400, // 24 hours in seconds
   },
-  
+
   // Compression configuration
   compression: {
     level: 6,
     threshold: 1024,
     filter: (req, res) => {
       if (req.headers['x-no-compression']) {
+        // Will not compress responses with this header
         return false;
       }
       return compression.filter(req, res);
     },
   },
-  
+
   // Body parser limits
   bodyParser: {
     json: { limit: '16kb' },
     urlencoded: { extended: true, limit: '16kb' },
   },
-  
+
   // JWT configuration
   jwt: {
     accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
@@ -138,7 +142,7 @@ export const securityConfig = {
     issuer: 'sajawat-sarees-api',
     audience: 'sajawat-sarees-users',
   },
-  
+
   // Password policy
   password: {
     minLength: 6,
@@ -149,7 +153,7 @@ export const securityConfig = {
     requireSpecialChars: false,
     saltRounds: 12,
   },
-  
+
   // Session configuration
   session: {
     name: 'sajawat.sid',
@@ -163,7 +167,7 @@ export const securityConfig = {
       sameSite: 'lax',
     },
   },
-  
+
   // File upload security
   fileUpload: {
     maxFileSize: 5 * 1024 * 1024, // 5MB
@@ -175,7 +179,7 @@ export const securityConfig = {
     ],
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
   },
-  
+
   // Input validation
   validation: {
     maxStringLength: 1000,
@@ -187,11 +191,11 @@ export const securityConfig = {
 // Create rate limiters
 export const createRateLimiters = () => {
   const limiters = {};
-  
-  Object.keys(securityConfig.rateLimits).forEach(key => {
+
+  Object.keys(securityConfig.rateLimits).forEach((key) => {
     limiters[key] = rateLimit(securityConfig.rateLimits[key]);
   });
-  
+
   return limiters;
 };
 
@@ -217,17 +221,17 @@ export const sanitizeInput = {
       .replace(/javascript:/gi, '')
       .replace(/on\w+=/gi, '');
   },
-  
+
   email: (email) => {
     if (typeof email !== 'string') return '';
     return email.toLowerCase().trim();
   },
-  
+
   phone: (phone) => {
     if (typeof phone !== 'string') return '';
     return phone.replace(/\D/g, '');
   },
-  
+
   alphanumeric: (input) => {
     if (typeof input !== 'string') return '';
     return input.replace(/[^a-zA-Z0-9]/g, '');
