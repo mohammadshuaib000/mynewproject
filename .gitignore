@@ -135,4 +135,3 @@ dist
 .yarn/install-state.gz
 .pnp.*
 backend/.env
-mynewproject/backend/.env
