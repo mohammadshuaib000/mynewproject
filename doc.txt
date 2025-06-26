@@ -1,0 +1,52 @@
+Build a unified authentication system for a website (only for customers, no mobile app) with the following features:
+
+🔐 Customer Authentication (Email/Phone + OTP-based)
+Users can sign up or log in using email or phone number.
+
+An OTP is sent via Twilio (for phone) or Nodemailer (for email).
+
+OTPs are short-lived (e.g., 5 minutes) and stored securely (hashed).
+
+Upon successful OTP verification:
+
+An Access Token (short-lived, e.g., 15 mins) is issued.
+
+A Refresh Token (long-lived, e.g., 7 days) is stored in HTTP-only cookie.
+
+🔁 Silent Authentication (Auto Login)
+If the user revisits the site:
+
+Check the refresh token from the cookie.
+
+If valid, silently issue a new access token (no need to log in again).
+
+If refresh token expired/invalid → redirect to login.
+
+🧾 Admin Authentication (Hardcoded Credentials)
+Admin logs in via a static hardcoded email and password (e.g., in .env).
+
+No signup or OTP for admin.
+
+On successful login, admin gets a separate JWT access token.
+
+Admin has restricted routes (e.g., /admin/dashboard).
+
+⚙️ Security & Token Handling
+Use JWT for access/refresh tokens.
+
+Store refresh tokens in secure, HTTP-only cookies.
+
+Middleware to:
+
+Protect customer routes (verifyJWT, optionalAuth)
+
+Protect admin routes (verifyAdmin)
+
+Auto-refresh tokens on frontend via silent background requests (optional enhancement).
+
+
+
+
+
+
+
